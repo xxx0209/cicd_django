@@ -1,2 +1,2 @@
-django==3.13
-pillow==12.1.0
+Django==3.13
+Pillow==12.1.0
