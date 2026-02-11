@@ -1,0 +1,35 @@
+{% extends "header.html" %}
+
+{% block title %}로그인{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="height: 70vh;">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="text-center mb-4">로그인</h2>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="row g-2">
+                        <div class="col-8">
+                            <button type="submit" class="btn btn-primary w-100">로그인</button>
+                        </div>
+                        <div class="col-4">
+                            <a href="{% url 'member:signup' %}" class="btn btn-outline-secondary w-100">회원 가입</a>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

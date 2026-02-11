@@ -1,0 +1,28 @@
+{% extends "header.html" %}
+
+{% block title %}과일 목록{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-3">과일 목록</h3>
+
+    <table class="table table-hover" style="margin: 20px;">
+        <thead>
+            <tr>
+                <th>아이디</th>
+                <th>상품명</th>
+                <th>단가</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fruit in fruit_list %}
+            <tr>
+                <td>{{ fruit.id }}</td>
+                <td>{{ fruit.name }}</td>
+                <td>{{ fruit.price }} 원</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

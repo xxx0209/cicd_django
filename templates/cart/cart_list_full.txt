@@ -1,0 +1,180 @@
+{% extends "header.html" %}
+{% load humanize %}
+{% block title %}장바구니{% endblock %}
+
+{% block content %}
+<style>
+    input[type="checkbox"] {
+        transform: scale(1.5);
+        margin: 5px;
+        cursor: pointer;
+    }
+</style>
+
+<div class="container mt-4">
+    <h2 class="mb-4">
+        <span style="color:blue; font-size:2rem;">{{ user.get_full_name|default:user.username }}</span>
+        <span style="font-size:1.3rem;">님의 장바구니</span>
+    </h2>
+
+    {# <form method="post" action="{% url 'order:make_order' %}">    #}
+        <form method="post" action="">
+            {% csrf_token %}
+            <table class="table table-striped table-bordered">
+                <thead>
+                <tr>
+                    <th style="width:30%;">
+                        <input type="checkbox" id="checkAll" onclick="toggleAll(this)"> 전체 선택
+                    </th>
+                    <th>상품 정보</th>
+                    <th>수량</th>
+                    <th>금액</th>
+                    <th>삭제</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% if cart_products %}
+                {% for item in cart_products %}
+                <tr>
+                    <td class="text-center align-middle">
+                        <input type="checkbox" name="selected_products" value="{{ item.id }}" class="checkItem">
+                    </td>
+                    <td class="text-center align-middle">
+                        <div class="row">
+                            <div class="col-4">
+                                <img src="{{ item.product.image.url }}" width="80" height="80" class="img-thumbnail"/>
+                            </div>
+                            <div class="col-8 d-flex align-items-center">
+                                {{ item.product.name }}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center align-middle">
+                        <input type="number" name="quantity_{{ item.id }}" value="{{ item.quantity }}" min="1"
+                               class="form-control" style="width:80px; margin:0 auto;">
+                    </td>
+                    <td class="text-center align-middle item-total-price"
+                        data-unit="{{ item.product.price }}"
+                        data-price="{{ item.total_price }}">
+                        {{ item.total_price|intcomma }} 원
+                    </td>
+                    <td class="text-center align-middle">
+                        {#{% url 'cart:delete_cart_product' item.id %}"#}
+                        <a href="{{'xx'}}}" class="btn btn-danger btn-sm">삭제</a>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">장바구니가 비어 있습니다.</td>
+                </tr>
+                {% endif %}
+                </tbody>
+            </table>
+
+            <h3 class="text-end mt-3">
+                총 주문 금액 : <span id="totalPrice">{{ cart_total_price|intcomma }}</span> 원
+            </h3>
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary btn-lg">주문하기</button>
+            </div>
+        </form>
+</div>
+
+<script>
+    // 전체 선택 체크박스 toggle
+    function toggleAll(source) {
+        const checkboxes = document.getElementsByClassName('checkItem');
+        for (let i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].checked = source.checked;
+        }
+        updateTotalPrice();
+    }
+
+    // 숫자 이외 입력 차단
+    function blockNonNumbers(e) {
+        const allowed = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"];
+        if (allowed.includes(e.key)) return;
+        if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+    }
+
+    // 개별 항목 가격 업데이트
+    function updateItemPrice(e) {
+        let qty = parseInt(e.target.value);
+        if (isNaN(qty) || qty < 1) {
+            qty = 1;
+            e.target.value = 1;
+        }
+
+        const row = e.target.closest("tr");
+        const priceCell = row.querySelector(".item-total-price");
+        const unitPrice = parseInt(priceCell.dataset.unit);
+
+        const newTotal = unitPrice * qty;
+        priceCell.dataset.price = newTotal;
+        priceCell.innerText = `${newTotal.toLocaleString()} 원`;
+
+        updateTotalPrice();
+
+        // ✅ 실제 DB에 즉시 반영하는 AJAX 요청
+    const itemId = row.querySelector(".checkItem").value;
+
+    fetch(`/cart/update_quantity/${itemId}/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            quantity: qty
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            alert("수량 업데이트에 실패했습니다.");
+        }
+    })
+    .catch(err => console.error("Error:", err));
+    }
+
+    // 선택된 항목만 총액 계산
+    function updateTotalPrice() {
+        const selectedCheckboxes = document.querySelectorAll(".checkItem:checked");
+        let sum = 0;
+
+        selectedCheckboxes.forEach(cb => {
+            const row = cb.closest("tr");
+            const priceCell = row.querySelector(".item-total-price");
+            sum += parseInt(priceCell.dataset.price);
+        });
+
+        document.getElementById("totalPrice").innerText = sum.toLocaleString();
+    }
+
+    // 페이지 로딩 시 이벤트 등록
+    document.addEventListener("DOMContentLoaded", function () {
+        const checkboxes = document.querySelectorAll(".checkItem");
+        const qtyInputs = document.querySelectorAll("input[type='number']"); // ← 여기에서 정의
+
+        // 전체 체크 ON & 개별 체크 이벤트 등록
+        checkboxes.forEach(cb => {
+            cb.checked = true;
+            cb.addEventListener("change", updateTotalPrice);
+        });
+
+        // 수량 입력 이벤트 등록
+        qtyInputs.forEach(input => {
+            input.addEventListener("input", updateItemPrice);
+            input.addEventListener("keydown", blockNonNumbers);
+        });
+
+        // 전체 선택 체크 ON
+        document.getElementById("checkAll").checked = true;
+
+        // 최초 총 금액 계산
+        updateTotalPrice();
+    });
+</script>
+
+{% endblock %}

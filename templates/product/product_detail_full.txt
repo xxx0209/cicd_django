@@ -1,0 +1,110 @@
+{% extends "header.html" %}
+{% load humanize %}
+
+{% block title %}상품 상세{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+    {% if message %}
+    <div class="alert alert-success">{{ message }}</div>
+    {% endif %}
+
+    <div class="card">
+        <div class="row g-0">
+            <!-- 좌측 이미지 -->
+            <div class="col-md-4">
+                {% if product.image %}
+                <img src="/media/{{ product.image }}" class="img-fluid" alt="{{ product.name }}"
+                     style="height:400px; object-fit:cover;">
+                {% else %}
+                <img src="/static/noimage.png" class="img-fluid" style="height:400px; object-fit:cover;">
+                {% endif %}
+            </div>
+
+            <!-- 우측 상품 정보 -->
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h3 class="card-title">{{ product.name }}</h3>
+
+                    <table class="table table-striped mt-3">
+                        <tbody>
+                        <tr>
+                            <td>가격</td>
+                            <td>{{ product.price|intcomma }} 원</td>
+                        </tr>
+                        <tr>
+                            <td>카테고리</td>
+                            <td>{{ product.category }}</td>
+                        </tr>
+                        <tr>
+                            <td>재고</td>
+                            <td>{{ product.stock|intcomma }}개</td>
+                        </tr>
+                        <tr>
+                            <td>설명</td>
+                            <td>{{ product.description }}</td>
+                        </tr>
+                        <tr>
+                            <td>등록일자</td>
+                            <td>{{ product.inputdate }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- 구매 수량 & 버튼 url 추가 'cart:add_to_cart' -->
+                    <form method="post" action="{% url 'cart:add_to_cart' %}"  class="mt-3" id="cartForm">
+                        {% csrf_token %}
+
+                        <!-- 수량 라벨 + 입력란 -->
+                        <div class="d-flex align-items-center" style="flex: 0 0 200px;">
+                            <label for="quantity" class="form-label me-2 mb-0" style="width: 120px;">구매 수량</label>
+                            <input type="number" id="quantity" name="quantity" min="1" value="{{ quantity }}"
+                                   class="form-control">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                        </div>
+
+                        <!-- 버튼은 아랫줄에 배치 -->
+                        <div class="d-flex gap-2 mt-2">
+                            <!-- 장바구니 버튼: 기존 URL  url 'cart:add_to_cart'  -->
+                            <button type="submit" formaction="{% url 'cart:add_to_cart' %}" class="btn btn-success">
+                                장바구니
+                            </button>
+
+                            <!-- 주문하기 버튼: 주문 생성 URL url 'order:create_order' -->
+                            <button type="submit" formaction="{{'xx'}}" class="btn btn-danger">
+                                주문하기
+                            </button>
+                            <a href="{% url 'product:product_list' %}" class="btn btn-secondary">목록</a>
+                        </div>
+                    </form>
+
+                    <script>
+                        document.getElementById('cartForm').addEventListener('submit', function (e) {
+                            const quantityInput = document.getElementById('quantity');
+
+                            // ★ 정상 작동하는 isAuthenticated
+                            const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+
+                            // 1. 로그인 체크
+                            if (!isAuthenticated) {
+                                e.preventDefault();
+                                alert('로그인이 필요한 서비스입니다.');
+                                window.location.href = "{% url 'member:login' %}";
+                                return;
+                            }
+
+                            // 2. 수량 체크
+                            if (!quantityInput.value || parseInt(quantityInput.value) < 1) {
+                                e.preventDefault();
+                                alert('구매 수량은 1개 이상 입력되어야 합니다.');
+                            }
+                        });
+                    </script>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

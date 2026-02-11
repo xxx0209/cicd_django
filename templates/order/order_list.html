@@ -1,0 +1,53 @@
+{% extends "header.html" %}
+
+{% block title %}주문 내역{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-3">주문 내역</h3>
+
+    {% if orders %}
+        <div class="row">
+            {% for order in orders %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm" style="border: 2px solid #495057;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="card-title">주문 번호 : {{ order.id }}</h5>
+                            <small class="text-muted">{{ order.orderdate }}</small>
+                        </div>
+
+                        <p class="card-text">
+                            상태 : <strong>{{ order.status }}</strong>
+                        </p>
+
+                        <ul style="padding-left: 20px;">
+                            {% for item in order.order_products.all %}
+                            <li>{{ item.product.name }} ({{ item.quantity }}개)</li>
+                            {% endfor %}
+                        </ul>
+
+                        <div class="d-flex align-items-center">
+                            {% if user.profile.role == 'ADMIN' %}
+                                <span class="me-3 px-3 py-1 border rounded fw-bold text-primary" style="border-color: #0d6efd; background-color: transparent; font-size: 0.9rem;">
+                                    👤 {{ order.member.first_name }}
+                                </span>
+
+                                {#'order:update_status' order.id 'COMPLETED'#}
+                                <a href="{{'xx'}}}" class="btn btn-success btn-sm me-2">완료</a>
+                            {% endif %}
+
+                            {#'order:cancel' order.id#}
+                            <a href="{{'xx'}}}" class="btn btn-danger btn-sm me-2">취소</a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-secondary">주문 내역이 없습니다.</div>
+    {% endif %}
+</div>
+{% endblock %}

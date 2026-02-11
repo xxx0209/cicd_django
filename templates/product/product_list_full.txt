@@ -1,0 +1,167 @@
+{% extends "header.html" %}
+{% load humanize %}
+{% block title %}상품 목록{% endblock %}
+
+
+{% block content %}
+<div class="container mt-4">
+{% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+    <h2 class="mb-4 text-center">상품 목록 페이지</h2>
+
+    <!-- 검색 필터 영역 -->
+    <form method="get" class="p-3 border rounded mb-4 bg-light">
+        <div class="row g-3">
+
+            <!-- 검색 기간 선택 -->
+            <div class="col-md-2">
+                <select name="searchDateType" class="form-select">
+                    <option value="all" {% if request.GET.searchDateType == "all" %}selected{% endif %}>전체 기간</option>
+                    <option value="1d" {% if request.GET.searchDateType == "1d" %}selected{% endif %}>1일</option>
+                    <option value="1w" {% if request.GET.searchDateType == "1w" %}selected{% endif %}>1주</option>
+                    <option value="1m" {% if request.GET.searchDateType == "1m" %}selected{% endif %}>1개월</option>
+                    <option value="6m" {% if request.GET.searchDateType == "6m" %}selected{% endif %}>6개월</option>
+                </select>
+            </div>
+
+            <!-- 카테고리 선택 -->
+            <div class="col-md-2">
+                <select name="category" class="form-select">
+                    <option value="ALL" {% if request.GET.category == "ALL" %}selected{% endif %}>전체</option>
+                    <option value="BREAD" {% if request.GET.category == "BREAD" %}selected{% endif %}>빵</option>
+                    <option value="BEVERAGE" {% if request.GET.category == "BEVERAGE" %}selected{% endif %}>음료</option>
+                    <option value="CAKE" {% if request.GET.category == "CAKE" %}selected{% endif %}>케이크</option>
+                </select>
+            </div>
+
+            <!-- 검색 모드 선택 -->
+            <div class="col-md-2">
+                <select name="searchMode" class="form-select">
+                    <option value="ALL" {% if request.GET.searchMode == "ALL" %}selected{% endif %}>전체 검색</option>
+                    <option value="name" {% if request.GET.searchMode == "name" %}selected{% endif %}>상품명</option>
+                    <option value="description" {% if request.GET.searchMode == "description" %}selected{% endif %}>상품 설명</option>
+                </select>
+            </div>
+
+            <!-- 검색어 입력란 -->
+            <div class="col-md-4">
+                <input type="text"
+                       name="searchKeyword"
+                       placeholder="검색어 입력"
+                       class="form-control"
+                       value="{{ request.GET.searchKeyword }}">
+            </div>
+
+            <!-- 조회 버튼 -->
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">조회</button>
+            </div>
+
+        </div>
+    </form>
+
+
+    <!-- 상품 목록 영역 -->
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100" onclick="location.href='{% url 'product:detail' product.id %}'" style="cursor: pointer;">
+
+                {% if product.image %}
+                    <img src="/media/{{ product.image }}"
+                         class="card-img-top"
+                         style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <img src="/static/noimage.png"
+                         class="card-img-top"
+                         style="height: 200px; object-fit: cover;">
+                {% endif %}
+
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }} ({{ product.id }})</h5>
+
+                    <p class="card-text">
+                        가격: {{ product.price|intcomma }} 원
+                    </p>
+
+                    {% if user.is_staff %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'product:update' product.id %}"
+                           class="btn btn-warning btn-sm">수정</a>
+
+                        <a href="{% url 'product:delete' product.id %}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('삭제하시겠습니까?');">
+                           삭제
+                        </a>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    <!-- 페이징 영역 -->
+    <nav>
+        <ul class="pagination justify-content-center">
+
+            {% if page_number > 0 %}
+            <li class="page-item {% if page_number == 0 %}disabled{% endif %}">
+                <a class="page-link"
+                   href="?pageNumber=0&pageSize={{ page_size }}&searchDateType={{ searchDateType }}&category={{ category }}&searchMode={{ searchMode }}&searchKeyword={{ searchKeyword }}">
+                    맨 처음
+                </a>
+            </li>
+
+            <li class="page-item">
+                <a class="page-link"
+                   href="?pageNumber={{ page_number|add:-1 }}&pageSize={{ page_size }}&searchDateType={{ searchDateType }}&category={{ category }}&searchMode={{ searchMode }}&searchKeyword={{ searchKeyword }}">
+                    이전
+                </a>
+            </li>
+            {% endif %}
+
+
+            <!-- 숫자 페이지 -->
+            {% for p in page_range %}
+            <li class="page-item {% if page_number == p %}active{% endif %}">
+                <a class="page-link"
+                   href="?pageNumber={{ p }}&pageSize={{ page_size }}&searchDateType={{ searchDateType }}&category={{ category }}&searchMode={{ searchMode }}&searchKeyword={{ searchKeyword }}">
+                    {{ p|add:1 }}
+                </a>
+            </li>
+            {% endfor %}
+
+
+            {% if page_number < total_pages|add:-1 %}
+            <li class="page-item">
+                <a class="page-link"
+                   href="?pageNumber={{ page_number|add:1 }}&pageSize={{ page_size }}&searchDateType={{ searchDateType }}&category={{ category }}&searchMode={{ searchMode }}&searchKeyword={{ searchKeyword }}">
+                    다음
+                </a>
+            </li>
+
+            <li class="page-item">
+                <a class="page-link"
+                   href="?pageNumber={{ total_pages|add:-1 }}&pageSize={{ page_size }}&searchDateType={{ searchDateType }}&category={{ category }}&searchMode={{ searchMode }}&searchKeyword={{ searchKeyword }}">
+                    맨 끝
+                </a>
+            </li>
+            {% endif %}
+
+        </ul>
+    </nav>
+
+</div>
+{% endblock %}
