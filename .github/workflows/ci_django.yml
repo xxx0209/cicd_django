@@ -37,14 +37,14 @@ jobs:
       #   run: |
       #     python manage.py test
 
-#      # 5️⃣ DockerHub 로그인
-#      - name: Login to DockerHub
-#        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-#
-#      # 6️⃣ Docker 이미지 빌드
-#      - name: Build Docker Image
-#        run: docker build -t xxx0209/cicd-django:latest -f DjangoDockerFile .
-#
-#      # 7️⃣ Docker 이미지 Push
-#      - name: Push Docker Image
-#        run: docker push xxx0209/cicd-django:latest
+      # 5️⃣ DockerHub 로그인
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # 6️⃣ Docker 이미지 빌드
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/cicd-django:latest -f DjangoDockerFile .
+
+      # 7️⃣ Docker 이미지 Push
+      - name: Push Docker Image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/cicd-django:latest
