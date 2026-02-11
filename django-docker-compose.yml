@@ -1,0 +1,7 @@
+services:
+  django:
+    image: image-django:latest   # 이미 존재하는 Docker 이미지 사용
+    container_name: cntr-django # 생성될 컨테이너 이름
+    ports:
+      - "8000:8000"  # 호스트:컨테이너 포트 매핑
+    restart: always # 컨테이너 종료 시 자동 재시작
